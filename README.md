@@ -29,6 +29,10 @@ Elastic/Kibana cluster.
 - Runs entirely **locally** — nothing is uploaded to a third-party server.
   Backups are built in memory and handed to you as a ZIP download.
 
+## App Screenshot
+
+<img width="943" height="472" alt="image" src="https://github.com/user-attachments/assets/4f2428e1-9b25-48d6-b20a-ce7d5d8c7ab7" />
+
 ## Quick start
 
 ```bash
