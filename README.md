@@ -21,9 +21,39 @@ Originally built to support an **ELK 7.x → 9.x upgrade**, where documenting an
 
 ---
 
+## Prerequisites
+
+Before installing Stackpack, ensure your system has the following installed:
+
+### 🪟 Windows Prerequisites
+- **Python 3.10+**: Ensure Python is added to PATH during installation ([python.org](https://www.python.org/downloads/)).
+- **Git**: Installed for cloning the repository ([git-scm.com](https://git-scm.com/)).
+- **Network connectivity**: Access to target Elasticsearch & Kibana HTTP(S) ports (e.g. `9200`, `5601`).
+
+### 🐧 Linux Prerequisites
+- **Python 3.10+** & `pip` & `venv`:
+  ```bash
+  # Ubuntu / Debian
+  sudo apt update && sudo apt install -y python3 python3-pip python3-venv git
+
+  # RHEL / CentOS / Rocky Linux
+  sudo dnf install -y python3 python3-pip git
+  ```
+- **Port 8501 Firewall access** (if accessing remotely from your PC/laptop):
+  ```bash
+  # UFW (Ubuntu/Debian)
+  sudo ufw allow 8501/tcp
+
+  # Firewalld (RHEL/CentOS)
+  sudo firewall-cmd --add-port=8501/tcp --permanent
+  sudo firewall-cmd --reload
+  ```
+
+---
+
 ## Quick Start
 
-### 🐧 Linux (Ubuntu / Debian / RHEL / CentOS)
+### 🐧 Linux Setup & Access URL
 
 #### Option 1: Automated Script (Recommended)
 ```bash
@@ -44,9 +74,14 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now stackpack
 ```
 
+#### 🌐 How to access Stackpack on Linux:
+- **From the Linux server itself** (local browser): `http://localhost:8501`
+- **From another PC/laptop on the network**: `http://<your-linux-server-ip>:8501`  
+  *(Example: `http://192.168.1.50:8501` or `http://stackpack.internal:8501`)*
+
 ---
 
-### 🪟 Windows (PowerShell / Command Prompt)
+### 🪟 Windows Setup & Access URL
 
 ```powershell
 # 1. Clone repository
@@ -62,7 +97,8 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-The application opens automatically in your browser at `http://localhost:8501`.
+#### 🌐 How to access Stackpack on Windows:
+- Open browser at `http://localhost:8501`
 
 ---
 
