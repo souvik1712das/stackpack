@@ -53,22 +53,31 @@ Before installing Stackpack, ensure your system has the following installed:
 
 ## Quick Start
 
-### 🐧 Linux Setup & Access URL
+### 🐧 Linux Setup & Execution
 
-#### Option 1: Automated Script (Recommended)
+#### Step 1: Install & Setup (Required for all Linux deployments)
 ```bash
 git clone https://github.com/souvik1712das/stackpack.git
 cd stackpack
 chmod +x deploy_linux.sh
 ./deploy_linux.sh
+```
+
+#### Step 2: Choose Execution Mode
+
+##### Mode A: Run Interactively in Foreground (Testing / Manual)
+```bash
 source .venv/bin/activate
 streamlit run app.py --server.port 8501 --server.address 0.0.0.0
 ```
 
-#### Option 2: Continuous Background Daemon (`systemd`)
+##### Mode B: Run Continuously as Background Service (`systemd`)
 ```bash
-sudo mv stackpack /opt/stackpack
+# Move repository to /opt/stackpack
+sudo mv ../stackpack /opt/stackpack
 cd /opt/stackpack
+
+# Install and start background service
 sudo cp stackpack.service /etc/systemd/system/stackpack.service
 sudo systemctl daemon-reload
 sudo systemctl enable --now stackpack
