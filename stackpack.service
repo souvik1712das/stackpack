@@ -1,0 +1,15 @@
+[Unit]
+Description=Stackpack v4 - Elastic & Kibana Backup and Migration Tool
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/opt/stackpack
+ExecStart=/opt/stackpack/.venv/bin/streamlit run app.py --server.port 8501 --server.address 0.0.0.0 --server.headless true
+Restart=on-failure
+RestartSec=5s
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

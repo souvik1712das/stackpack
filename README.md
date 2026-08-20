@@ -21,6 +21,23 @@ Elastic/Kibana cluster.
   exports each space with `includeReferencesDeep` so dependent objects come
   along automatically, and outputs an Excel summary plus one `.ndjson` file
   per space.
+- **Cluster Assets backup**: exports and restores cluster-level configurations
+  including Component Templates, Index Templates, ILM & SLM Policies, Enrich
+  Policies, Ingest Pipelines, Stored Scripts, and Snapshot Repositories into
+  clean JSON structures and an Excel summary.
+- **ML Assets backup**: exports and restores Machine Learning configurations —
+  Anomaly Detection Jobs, Datafeeds, Data Frame Analytics Jobs, Calendars, and
+  Filters — with runtime state stripped for clean restore.
+- **Security backup**: exports native-realm users (with password hashes) and
+  roles, with reserved-item detection and per-item Overwrite/Skip on restore.
+- **Scripted → Runtime Fields migration**: inventories scripted fields in Kibana
+  data views and migrates them to runtime fields (scripted fields are removed
+  in 9.x), with an optional Painless syntax check.
+- **Upgrade Assistant — bulk reindexing (8.19 → 9.x)**: discovers indices and
+  data streams that still need reindexing for 9.x and reindexes them one at a
+  time through Kibana's Upgrade Assistant — with live progress, Halt/Resume/
+  Cancel/Hard-stop controls, targeted reindexing, post-reindex validation, and
+  an Excel tracker.
 - **Optional restore** for both, gated behind explicit confirmation and a
   same-host safety check so you can't accidentally write back into your
   source/production cluster.
@@ -46,7 +63,7 @@ The app opens at `http://localhost:8501`.
 
 ## Usage
 
-1. Open the **Watcher Backup** or **Kibana Saved Objects** tab.
+1. Open the **Watcher Backup**, **Kibana Saved Objects**, or **Cluster Assets Backup** tab.
 2. Enter your cluster/Kibana URL, username, and password (see in-app
    placeholder examples for the expected format).
 3. Click **Fetch** and watch the progress bar.
@@ -81,6 +98,18 @@ kibana_export_<timestamp>.zip
     └── ...
 ```
 
+**Cluster Assets backup**
+```
+cluster_assets_backup_<timestamp>.zip
+├── cluster_assets_summary_<timestamp>.xlsx
+├── ilm_policies/
+│   └── default_ilm_policy.json
+├── ingest_pipelines/
+│   └── filebeat_pipeline.json
+└── index_templates/
+    └── ...
+```
+
 ## Required permissions
 
 - Elasticsearch: a user with rights to read `.watches` and call the Watcher
@@ -106,7 +135,13 @@ kibana_export_<timestamp>.zip
 .
 ├── app.py              # Streamlit UI
 ├── watcher_logic.py    # ES Watcher fetch/restore logic (UI-agnostic)
-|── kibana_logic.py     # Kibana saved objects fetch/restore logic (UI-agnostic)
+├── kibana_logic.py     # Kibana saved objects fetch/restore logic (UI-agnostic)
+├── cluster_logic.py    # ES cluster assets fetch/restore logic (UI-agnostic)
+├── ml_logic.py         # ES ML assets fetch/restore logic (UI-agnostic)
+├── security_logic.py   # ES security users/roles fetch/restore logic (UI-agnostic)
+├── runtime_field_logic.py  # Scripted → Runtime field migration logic (UI-agnostic)
+├── reindex_logic.py    # Upgrade Assistant reindexing logic + background worker (UI-agnostic)
+├── implementation_plan.md
 ├── requirements.txt
 └── README.md
 ```
