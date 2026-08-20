@@ -34,7 +34,7 @@ Before installing Stackpack, ensure your system has the following installed:
 - **Python 3.10+** & `pip` & `venv`:
   ```bash
   # Ubuntu / Debian
-  sudo apt update && sudo apt install -y python3 python3-pip python3-venv git
+  sudo apt update && sudo apt install -y python3 python3-pip python3-venv python3-full git
 
   # RHEL / CentOS / Rocky Linux
   sudo dnf install -y python3 python3-pip git
