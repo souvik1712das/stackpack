@@ -1,153 +1,183 @@
-# Elastic & Kibana Backup Tool
+# Elastic & Kibana Backup & Migration Tool (Stackpack v4)
 
-A small Streamlit app for backing up — and optionally restoring — **Elasticsearch
-Watcher scripts** and **Kibana saved objects** (dashboards, visualizations,
-index patterns, etc., per space, with deep references).
+A comprehensive Streamlit application for backing up, restoring, and migrating **Elasticsearch Watchers**, **Kibana Saved Objects**, **Cluster Assets**, **ML Configurations**, **Security Users & Roles**, **Scripted to Runtime Fields**, and **Upgrade Assistant Reindexing (8.19 → 9.x)**.
 
-Originally built to support an **ELK 7.x → 9.x upgrade**, where documenting
-and being able to restore 300+ watchers and dozens of Kibana spaces by hand
-was not realistic. Should work against any reasonably compatible
-Elastic/Kibana cluster.
+Originally built to support an **ELK 7.x → 9.x upgrade**, where documenting and restoring 300+ watchers, dozens of Kibana spaces, templates, ILM policies, ML jobs, and native users by hand was not realistic. Compatible with Elastic/Kibana 7.x, 8.x, and 9.x clusters.
 
 ## Features
 
-- **Watcher backup**: fetches every watcher in the cluster, extracts embedded
-  Painless scripts (condition / transform / action scripts) into readable
-  columns, pulls recipient lists from email/Slack/PagerDuty/webhook/Jira
-  actions, and outputs both an Excel summary and one restore-ready `.txt`
-  file per watcher.
-- **Kibana saved objects backup**: discovers all spaces, lets you pick which
-  object types to export (or just use the sensible default selection),
-  exports each space with `includeReferencesDeep` so dependent objects come
-  along automatically, and outputs an Excel summary plus one `.ndjson` file
-  per space.
-- **Cluster Assets backup**: exports and restores cluster-level configurations
-  including Component Templates, Index Templates, ILM & SLM Policies, Enrich
-  Policies, Ingest Pipelines, Stored Scripts, and Snapshot Repositories into
-  clean JSON structures and an Excel summary.
-- **ML Assets backup**: exports and restores Machine Learning configurations —
-  Anomaly Detection Jobs, Datafeeds, Data Frame Analytics Jobs, Calendars, and
-  Filters — with runtime state stripped for clean restore.
-- **Security backup**: exports native-realm users (with password hashes) and
-  roles, with reserved-item detection and per-item Overwrite/Skip on restore.
-- **Scripted → Runtime Fields migration**: inventories scripted fields in Kibana
-  data views and migrates them to runtime fields (scripted fields are removed
-  in 9.x), with an optional Painless syntax check.
-- **Upgrade Assistant — bulk reindexing (8.19 → 9.x)**: discovers indices and
-  data streams that still need reindexing for 9.x and reindexes them one at a
-  time through Kibana's Upgrade Assistant — with live progress, Halt/Resume/
-  Cancel/Hard-stop controls, targeted reindexing, post-reindex validation, and
-  an Excel tracker.
-- **Optional restore** for both, gated behind explicit confirmation and a
-  same-host safety check so you can't accidentally write back into your
-  source/production cluster.
-- **Progress bars** for both fetch and restore, since 300+ watchers or many
-  Kibana spaces can take a little while.
-- Runs entirely **locally** — nothing is uploaded to a third-party server.
-  Backups are built in memory and handed to you as a ZIP download.
+- **Watcher Backup & Restore**: Fetches watchers, extracts embedded Painless scripts into readable columns, pulls recipient lists (email/Slack/Webhook/Jira), and outputs an Excel summary plus restore-ready `.txt` files.
+- **Kibana Saved Objects Backup & Restore**: Discovers spaces, exports selected object types with `includeReferencesDeep` so dependent objects follow automatically, and outputs an Excel summary plus `.ndjson` files per space.
+- **Cluster Assets Backup & Restore**: Exports/restores Component Templates, Index Templates, ILM & SLM Policies, Enrich Policies, Ingest Pipelines, Stored Scripts, and Snapshot Repositories into clean JSON structures and an Excel summary.
+- **ML Assets Backup & Restore**: Exports/restores Anomaly Detection Jobs, Datafeeds, Data Frame Analytics Jobs, Calendars, and Filters — with runtime state stripped for clean restore.
+- **Security Backup & Restore**: Exports native-realm users (with password hashes) and roles, with reserved-item detection and per-item Overwrite/Skip controls on restore.
+- **Scripted → Runtime Fields Migration**: Inventories scripted fields in Kibana data views and migrates them to runtime fields (as scripted fields are deprecated/removed in 9.x), with Painless syntax validation.
+- **Upgrade Assistant — Bulk Reindexing (8.19 → 9.x)**: Discovers indices and data streams requiring reindexing for 9.x and reindexes them via Kibana's Upgrade Assistant API — with live progress tracking, Halt/Resume/Cancel controls, targeted reindexing, and post-reindex validation.
+- **Safety First**: Fetch operations are strictly read-only. Restore operations require explicit text confirmation and enforce a host-mismatch check to prevent accidental overwrites into source/production clusters.
 
 ## App Screenshot
 
-<img width="943" height="472" alt="image" src="https://github.com/user-attachments/assets/4f2428e1-9b25-48d6-b20a-ce7d5d8c7ab7" />
+<img width="943" height="472" alt="Stackpack UI" src="https://github.com/user-attachments/assets/4f2428e1-9b25-48d6-b20a-ce7d5d8c7ab7" />
 
-## Quick start
+---
 
+## Quick Start
+
+### 🐧 Linux (Ubuntu / Debian / RHEL / CentOS)
+
+#### Option 1: Automated Script (Recommended)
 ```bash
-git clone <this-repo-url>
-cd <repo-folder>
+git clone https://github.com/souvik1712das/stackpack.git
+cd stackpack
+chmod +x deploy_linux.sh
+./deploy_linux.sh
+source .venv/bin/activate
+streamlit run app.py --server.port 8501 --server.address 0.0.0.0
+```
+
+#### Option 2: Continuous Background Daemon (`systemd`)
+```bash
+sudo mv stackpack /opt/stackpack
+cd /opt/stackpack
+sudo cp stackpack.service /etc/systemd/system/stackpack.service
+sudo systemctl daemon-reload
+sudo systemctl enable --now stackpack
+```
+
+---
+
+### 🪟 Windows (PowerShell / Command Prompt)
+
+```powershell
+# 1. Clone repository
+git clone https://github.com/souvik1712das/stackpack.git
+cd stackpack
+
+# 2. Create and activate virtual environment
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+
+# 3. Install requirements & run
 pip install -r requirements.txt
 streamlit run app.py
 ```
 
-The app opens at `http://localhost:8501`.
+The application opens automatically in your browser at `http://localhost:8501`.
+
+---
 
 ## Usage
 
-1. Open the **Watcher Backup**, **Kibana Saved Objects**, or **Cluster Assets Backup** tab.
-2. Enter your cluster/Kibana URL, username, and password (see in-app
-   placeholder examples for the expected format).
-3. Click **Fetch** and watch the progress bar.
-4. Download the resulting ZIP.
+1. **Select Feature Tab**: Choose **Watcher Backup**, **Kibana Saved Objects**, **Cluster Assets**, **ML Assets**, **Security**, **Runtime Fields**, or **Upgrade Reindex**.
+2. **Source Connection**: Enter source cluster / Kibana URL and credentials (`URL`, `Username`, `Password`).
+3. **Fetch & Download**: Click **Fetch** to run the discovery. Once complete, click **Download Backup ZIP** to save the generated archive locally.
+4. **Restore into Target Cluster**:
+   - Go to the **Restore** sub-tab within the respective feature.
+   - Upload your previously generated Backup ZIP.
+   - Enter **Target** cluster credentials (must differ from the source host for safety).
+   - Type `RESTORE` to confirm, then execute.
 
-To restore into a **new** cluster (e.g. your upgraded 9.x environment):
+---
 
-1. Go to the **Restore** sub-tab.
-2. Upload the ZIP you downloaded earlier.
-3. Enter the **target** cluster's URL and credentials — this must be
-   different from the source you used for fetching.
-4. Type `RESTORE` to confirm, then run.
+## What's Inside a Backup ZIP
 
-## What's inside a backup ZIP
-
-**Watcher backup**
+### 1. Watcher Backup
 ```
 es_watchers_backup_<timestamp>.zip
 ├── es_watchers_<timestamp>.xlsx        # Summary + Full Detail sheets
 └── watcher_scripts/
-    ├── my_alert_watcher.txt            # restore-ready JSON, with header comments
+    ├── alert_high_cpu.txt              # Restore-ready JSON payload per watcher
     └── ...
 ```
 
-**Kibana backup**
+### 2. Kibana Saved Objects Backup
 ```
 kibana_export_<timestamp>.zip
-├── export_summary_<timestamp>.xlsx     # counts per space / object type
+├── export_summary_<timestamp>.xlsx     # Object counts per space & type
 └── spaces/
-    ├── default.ndjson                  # Kibana-import-ready NDJSON
-    ├── analytics_team.ndjson
+    ├── default.ndjson                  # Kibana-importable NDJSON per space
+    ├── security_analytics.ndjson
     └── ...
 ```
 
-**Cluster Assets backup**
+### 3. Cluster Assets Backup
 ```
 cluster_assets_backup_<timestamp>.zip
 ├── cluster_assets_summary_<timestamp>.xlsx
+├── component_templates/
+│   └── logs_settings.json
+├── index_templates/
+│   └── custom_logs_template.json
 ├── ilm_policies/
-│   └── default_ilm_policy.json
+│   └── hot_warm_policy.json
+├── slm_policies/
+│   └── daily_snapshots.json
 ├── ingest_pipelines/
-│   └── filebeat_pipeline.json
-└── index_templates/
-    └── ...
+│   └── main_parser_pipeline.json
+└── snapshot_repositories/
+    └── s3_backup_repo.json
 ```
 
-## Required permissions
+### 4. ML Assets Backup
+```
+ml_assets_backup_<timestamp>.zip
+├── ml_assets_summary_<timestamp>.xlsx
+├── anomaly_detectors/
+│   └── response_time_detector.json
+├── datafeeds/
+│   └── datafeed_response_time.json
+├── calendars/
+│   └── maintenance_windows.json
+└── filters/
+    └── known_ips_filter.json
+```
 
-- Elasticsearch: a user with rights to read `.watches` and call the Watcher
-  APIs (the `elastic` superuser works; for least-privilege, a role with
-  `manage_watcher` cluster privilege).
-- Kibana: a user with `all` privileges on the spaces you want to export/import
-  (the `elastic` superuser works for this too).
+### 5. Security Backup
+```
+security_backup_<timestamp>.zip
+├── security_summary_<timestamp>.xlsx   # Native users & roles summary
+├── users/
+│   └── analyst_user.json              # Native user payload with hash
+└── roles/
+    └── security_reader_role.json       # Native role definition payload
+```
 
-## Notes on safety
+---
 
-- Fetch operations are **read-only** — no `PUT`/`POST` calls are made against
-  the source cluster.
-- Restore operations are explicit, opt-in, and require typing a confirmation
-  phrase. They also refuse to run if the target host matches the source host
-  entered earlier in the same session.
-- Backup files (`.ndjson`, `.txt`) contain real configuration — URLs, index
-  names, recipient lists, scripts. Treat them as sensitive and avoid
-  committing them to a public repository.
+## Required Permissions
 
-## Project structure
+- **Elasticsearch**: User with cluster read permissions and appropriate API privileges (`manage_watcher`, `manage_security`, `cluster:admin/ilm/get`, etc.). The `elastic` superuser works for full scope.
+- **Kibana**: User with `all` privileges across targeted Kibana spaces.
+
+---
+
+## Safety Controls
+
+- Fetch operations are **100% read-only**.
+- Restore operations require explicit confirmation (`RESTORE`) and enforce host distinction so production clusters are protected against accidental overwrites.
+- No sensitive credentials or backup payloads leave your system — execution occurs strictly locally in memory.
+
+---
+
+## Project Structure
 
 ```
 .
-├── app.py              # Streamlit UI
-├── watcher_logic.py    # ES Watcher fetch/restore logic (UI-agnostic)
-├── kibana_logic.py     # Kibana saved objects fetch/restore logic (UI-agnostic)
-├── cluster_logic.py    # ES cluster assets fetch/restore logic (UI-agnostic)
-├── ml_logic.py         # ES ML assets fetch/restore logic (UI-agnostic)
-├── security_logic.py   # ES security users/roles fetch/restore logic (UI-agnostic)
-├── runtime_field_logic.py  # Scripted → Runtime field migration logic (UI-agnostic)
-├── reindex_logic.py    # Upgrade Assistant reindexing logic + background worker (UI-agnostic)
-├── implementation_plan.md
-├── requirements.txt
-└── README.md
+├── app.py                  # Streamlit UI application entry point
+├── watcher_logic.py        # ES Watcher fetch, parse, and restore module
+├── kibana_logic.py         # Kibana saved objects space export/restore module
+├── cluster_logic.py        # ES templates, ILM/SLM, pipelines, repos module
+├── ml_logic.py             # ES ML jobs, datafeeds, calendars, filters module
+├── security_logic.py       # Native realm users and roles backup/restore module
+├── runtime_field_logic.py  # Scripted fields to Runtime fields migration module
+├── reindex_logic.py        # Upgrade Assistant bulk reindex worker engine
+├── deploy_linux.sh         # Linux automated environment deployment script
+├── stackpack.service       # Systemd service unit template for Linux background running
+├── requirements.txt        # Python dependency specifications
+└── README.md               # Project documentation
 ```
 
-The logic codes have no Streamlit imports, so they can also be reused
-directly from a plain Python script or notebook if you'd rather not run the UI.
+---
 
 ## License
 
@@ -155,6 +185,5 @@ Use, modify, and share freely within your organization.
 
 ---
 
-Crafted by Souvik Das
-
+Crafted by Souvik Das  
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/souvik-das-6ba904a2/)
